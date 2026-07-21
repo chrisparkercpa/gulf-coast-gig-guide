@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#063b5b">
+  <title>Gulf Coast Gig Guide</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <p class="eyebrow">FLORIDA • ALABAMA • MISSISSIPPI</p>
+      <h1>Gulf Coast Gig Guide</h1>
+      <p>Every show. Every venue. Every night.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="notice" role="status">
+      <strong>Demo data:</strong> This version proves that every button and filter works. Verify a show with the venue before driving.
+    </section>
+
+    <section class="filter-panel" aria-label="Show filters">
+      <div class="date-buttons" id="dateButtons">
+        <button class="filter-button active" type="button" data-range="all">All 4 weeks</button>
+        <button class="filter-button" type="button" data-range="today">Today</button>
+        <button class="filter-button" type="button" data-range="tomorrow">Tomorrow</button>
+        <button class="filter-button" type="button" data-range="weekend">This weekend</button>
+        <button class="filter-button" type="button" data-range="7days">Next 7 days</button>
+      </div>
+
+      <div class="select-grid">
+        <label>State
+          <select id="stateFilter"><option value="all">All states</option></select>
+        </label>
+        <label>City / area
+          <select id="cityFilter"><option value="all">All cities</option></select>
+        </label>
+        <label>Venue
+          <select id="venueFilter"><option value="all">All venues</option></select>
+        </label>
+        <label>Venue type
+          <select id="typeFilter"><option value="all">All venue types</option></select>
+        </label>
+        <label>Genre
+          <select id="genreFilter"><option value="all">All genres</option></select>
+        </label>
+      </div>
+
+      <div class="check-grid">
+        <label><input id="freeFilter" type="checkbox"> Free only</label>
+        <label><input id="waterfrontFilter" type="checkbox"> Waterfront only</label>
+        <label><input id="casinoFilter" type="checkbox"> Casinos only</label>
+      </div>
+
+      <button id="resetButton" class="reset-button" type="button">Show everything</button>
+    </section>
+
+    <section class="results-head">
+      <div>
+        <h2>Upcoming shows</h2>
+        <p id="summaryText">Loading shows…</p>
+      </div>
+      <label class="sort-label">Sort
+        <select id="sortFilter">
+          <option value="date">Soonest first</option>
+          <option value="city">City A–Z</option>
+          <option value="venue">Venue A–Z</option>
+        </select>
+      </label>
+    </section>
+
+    <section id="eventGrid" class="event-grid" aria-live="polite"></section>
+    <section id="emptyState" class="empty-state" hidden>
+      <h3>No shows match those filters.</h3>
+      <p>Tap “Show everything” and try again.</p>
+    </section>
+  </main>
+
+  <footer><div class="wrap">Gulf Coast Gig Guide • Working GitHub Pages demo</div></footer>
+  <script src="app.js" defer></script>
+</body>
+</html>
