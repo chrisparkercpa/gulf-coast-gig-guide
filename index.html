@@ -12,18 +12,19 @@
     <div class="wrap">
       <p class="eyebrow">FLORIDA • ALABAMA • MISSISSIPPI</p>
       <h1>Gulf Coast Gig Guide</h1>
-      <p>Every show. Every venue. Every night.</p>
+      <p>Live music from New Orleans to Apalachicola.</p>
     </div>
   </header>
 
   <main class="wrap">
-    <section class="notice" role="status">
-      <strong>Demo data:</strong> This version proves that every button and filter works. Verify a show with the venue before driving.
+    <section id="errorState" class="notice" role="alert" hidden>
+      <strong>Show list unavailable.</strong> The Google Sheet may not be shared yet.
+      Open the sheet, tap <em>Share → Anyone with the link → Viewer</em>, then reload this page.
     </section>
 
     <section class="filter-panel" aria-label="Show filters">
       <div class="date-buttons" id="dateButtons">
-        <button class="filter-button active" type="button" data-range="all">All 4 weeks</button>
+        <button class="filter-button active" type="button" data-range="all">All upcoming</button>
         <button class="filter-button" type="button" data-range="today">Today</button>
         <button class="filter-button" type="button" data-range="tomorrow">Tomorrow</button>
         <button class="filter-button" type="button" data-range="weekend">This weekend</button>
@@ -40,9 +41,6 @@
         <label>Venue
           <select id="venueFilter"><option value="all">All venues</option></select>
         </label>
-        <label>Venue type
-          <select id="typeFilter"><option value="all">All venue types</option></select>
-        </label>
         <label>Genre
           <select id="genreFilter"><option value="all">All genres</option></select>
         </label>
@@ -50,8 +48,6 @@
 
       <div class="check-grid">
         <label><input id="freeFilter" type="checkbox"> Free only</label>
-        <label><input id="waterfrontFilter" type="checkbox"> Waterfront only</label>
-        <label><input id="casinoFilter" type="checkbox"> Casinos only</label>
       </div>
 
       <button id="resetButton" class="reset-button" type="button">Show everything</button>
@@ -61,14 +57,18 @@
       <div>
         <h2>Upcoming shows</h2>
         <p id="summaryText">Loading shows…</p>
+        <p id="lastUpdated" class="updated-stamp"></p>
       </div>
-      <label class="sort-label">Sort
-        <select id="sortFilter">
-          <option value="date">Soonest first</option>
-          <option value="city">City A–Z</option>
-          <option value="venue">Venue A–Z</option>
-        </select>
-      </label>
+      <div class="results-tools">
+        <label class="sort-label">Sort
+          <select id="sortFilter">
+            <option value="date">Soonest first</option>
+            <option value="city">City A–Z</option>
+            <option value="venue">Venue A–Z</option>
+          </select>
+        </label>
+        <button id="refreshButton" class="filter-button" type="button">Refresh</button>
+      </div>
     </section>
 
     <section id="eventGrid" class="event-grid" aria-live="polite"></section>
@@ -78,7 +78,7 @@
     </section>
   </main>
 
-  <footer><div class="wrap">Gulf Coast Gig Guide • Working GitHub Pages demo</div></footer>
+  <footer><div class="wrap">Gulf Coast Gig Guide • Verify shows with the venue before driving.</div></footer>
   <script src="app.js" defer></script>
 </body>
 </html>
