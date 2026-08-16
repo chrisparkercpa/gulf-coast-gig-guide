@@ -236,12 +236,91 @@ function card(x) {
     `</div></div>`;
   return article;
 }
+
+/* ---------- Compact list view (narrow screens) ----------
+   Below 620px the card grid becomes a day-grouped list: the date
+   moves into a divider so each row only carries the time, and the
+   whole row is the link. Desktop and tablet keep the card grid. */
+const compactMQ = window.matchMedia("(max-width: 620px)");
+const PIN_SVG =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" ' +
+  'stroke-linecap="round" stroke-linejoin="round" focusable="false" aria-hidden="true">' +
+  '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+
+function dayBar(d, count) {
+  const div = document.createElement("div");
+  div.className = "daybar";
+  const diff = daysFromToday(d);
+  const label = diff === 0 ? "Tonight" : diff === 1 ? "Tomorrow"
+    : d.toLocaleDateString(undefined, { weekday: "long" });
+  div.innerHTML =
+    `<span class="dow">${escapeHtml(label)}</span>` +
+    `<span class="dnum">${escapeHtml(d.toLocaleDateString(undefined, { month: "short", day: "numeric" }))}</span>` +
+    `<span class="cnt">${count} show${count === 1 ? "" : "s"}</span>`;
+  return div;
+}
+
+function listRow(x) {
+  const wrap = document.createElement("div");
+  wrap.className = "row";
+  const source = safeUrl(x.source);
+  const t = String(x.time || "").trim();
+  const m = t.match(/^(\d{1,2}:\d{2})\s*(AM|PM)$/i);
+  const hm = m ? m[1] : (t || "—");
+  const ap = m ? m[2].toUpperCase() : "";
+  const badge =
+    (x.genre ? `<span class="badge">${escapeHtml(x.genre)}</span>` : "") +
+    (x.free ? `<span class="badge">Free</span>`
+            : (x.cover ? `<span class="badge">${escapeHtml(x.cover)}</span>` : ""));
+  const title = source
+    ? `<a class="act" href="${source}" target="_blank" rel="noopener">${escapeHtml(x.artist)}</a>`
+    : `<span class="act">${escapeHtml(x.artist)}</span>`;
+  wrap.innerHTML =
+    `<span class="when"><span class="h">${escapeHtml(hm)}</span>` +
+    (ap ? `<span class="ap">${escapeHtml(ap)}</span>` : "") + `</span>` +
+    `<span class="what">${title}` +
+    `<span class="loc">${escapeHtml([x.venue, x.city].filter(Boolean).join(" · "))}</span>` +
+    (badge ? `<span class="tags">${badge}</span>` : "") +
+    `</span>` +
+    `<a class="pin" href="${x.directions}" target="_blank" rel="noopener" ` +
+    `aria-label="Directions to ${escapeHtml(x.venue || "venue")}">${PIN_SVG}</a>`;
+  return wrap;
+}
+
 function render() {
   const list = getFiltered();
-  el.grid.replaceChildren(...list.map(card));
+  const compact = compactMQ.matches;
+  el.grid.classList.toggle("list-mode", compact);
+
+  if (!compact) {
+    el.grid.replaceChildren(...list.map(card));
+  } else {
+    // Only group by day when the list is actually in date order.
+    const group = el.sort.value === "date";
+    const counts = {};
+    if (group) list.forEach(x => {
+      const k = x.date.toDateString();
+      counts[k] = (counts[k] || 0) + 1;
+    });
+    const nodes = [];
+    let current = "";
+    list.forEach(x => {
+      if (group) {
+        const k = x.date.toDateString();
+        if (k !== current) { current = k; nodes.push(dayBar(x.date, counts[k])); }
+      }
+      nodes.push(listRow(x));
+    });
+    el.grid.replaceChildren(...nodes);
+  }
+
   el.summary.textContent = `Showing ${list.length} of ${events.length} upcoming shows`;
   el.empty.hidden = list.length !== 0 || events.length === 0;
 }
+
+// Re-render when crossing the breakpoint (rotation, resize).
+if (compactMQ.addEventListener) compactMQ.addEventListener("change", render);
+else if (compactMQ.addListener) compactMQ.addListener(render);
 
 /* ---------- Events ---------- */
 document.getElementById("dateButtons").addEventListener("click", e => {
