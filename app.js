@@ -22,6 +22,15 @@ const SHEET_CSV_URL =
 // For local testing you can load any CSV with ?csv=sample.csv
 const DATA_URL = new URLSearchParams(location.search).get("csv") || SHEET_CSV_URL;
 
+/* ---------- Regions ----------
+   Each page declares its region with <body data-region="...">.
+   Adding a market later is a new HTML file, not a code change. */
+const REGIONS = {
+  gulf: { states: ["FL", "AL", "MS"], label: "the Gulf Coast" },
+  la:   { states: ["LA"], label: "Louisiana" }
+};
+const REGION = REGIONS[document.body.dataset.region] || REGIONS.gulf;
+
 const el = {
   grid: document.getElementById("eventGrid"),
   summary: document.getElementById("summaryText"),
@@ -33,7 +42,6 @@ const el = {
   venue: document.getElementById("venueFilter"),
   genre: document.getElementById("genreFilter"),
   free: document.getElementById("freeFilter"),
-  nola: document.getElementById("nolaFilter"),
   sort: document.getElementById("sortFilter")
 };
 
@@ -118,6 +126,8 @@ function rowsToEvents(rows) {
     const status = get(row, "status").toLowerCase();
     if (status.includes("cancel") || status.includes("hide")) return;
     if (daysFromToday(date) < 0) return; // expired shows disappear automatically
+    const st = get(row, "state").toUpperCase();
+    if (st && !REGION.states.includes(st)) return; // other region's guide owns this row
     const cover = get(row, "cover");
     const venue = get(row, "venue"), city = get(row, "city"), state = get(row, "state");
     list.push({
@@ -192,14 +202,7 @@ function dateMatches(date) {
 function selected(select) { return select.value === "all" ? null : select.value; }
 function getFiltered() {
   const f = { state: selected(el.state), city: selected(el.city), venue: selected(el.venue), genre: selected(el.genre) };
-  // New Orleans sits outside the Gulf Coast proper and carries a large share
-  // of the rows, so Louisiana is hidden unless it is asked for. Asking for a
-  // Louisiana state or city directly counts as asking for it.
-  const explicitLA = f.state === "LA" ||
-    (f.city && events.some(x => x.city === f.city && x.state === "LA"));
-  const includeLA = el.nola.checked || explicitLA;
   const list = events.filter(x =>
-    (includeLA || x.state !== "LA") &&
     dateMatches(x.date) &&
     (!f.state || x.state === f.state) &&
     (!f.city || x.city === f.city) &&
@@ -338,13 +341,12 @@ document.getElementById("dateButtons").addEventListener("click", e => {
   document.querySelectorAll("button[data-range]").forEach(x => x.classList.toggle("active", x === b));
   render();
 });
-[el.state, el.city, el.venue, el.genre, el.free, el.nola, el.sort].forEach(c => c.addEventListener("change", render));
+[el.state, el.city, el.venue, el.genre, el.free, el.sort].forEach(c => c.addEventListener("change", render));
 document.getElementById("resetButton").addEventListener("click", () => {
   activeRange = "all";
   document.querySelectorAll("button[data-range]").forEach(x => x.classList.toggle("active", x.dataset.range === "all"));
   [el.state, el.city, el.venue, el.genre].forEach(x => x.value = "all");
   el.free.checked = false;
-  el.nola.checked = false;
   el.sort.value = "date";
   render();
 });
