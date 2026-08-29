@@ -156,6 +156,7 @@ async function loadShows() {
     if (/^\s*</.test(text)) throw new Error("Sheet is not shared publicly yet");
     events = rowsToEvents(parseCsv(text));
     buildFilterOptions();
+    applyUrlFilters();
     el.errorBox.hidden = true;
     el.updated.textContent = "Updated " +
       new Date().toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" });
@@ -200,6 +201,49 @@ function dateMatches(date) {
   return true;
 }
 function selected(select) { return select.value === "all" ? null : select.value; }
+
+/* ---------- Shareable / QR deep links ----------
+   Filters live in the URL, so any view can be linked to directly:
+     ?venue=Sharky%27s%20Beachfront%20Restaurant
+     ?city=Grayton%20Beach&when=today
+     ?free=1&when=weekend
+   To make a QR target: set the filters on the page, then copy the URL. */
+const VALID_RANGES = ["all", "today", "tomorrow", "weekend", "7days"];
+
+function applyUrlFilters() {
+  const p = new URLSearchParams(location.search);
+  const set = (sel, v) => {
+    if (v && Array.from(sel.options).some(o => o.value === v)) sel.value = v;
+  };
+  set(el.state, p.get("state"));
+  set(el.city, p.get("city"));
+  set(el.venue, p.get("venue"));
+  set(el.genre, p.get("genre"));
+  if (p.get("free") === "1") el.free.checked = true;
+  const sort = p.get("sort");
+  if (sort && Array.from(el.sort.options).some(o => o.value === sort)) el.sort.value = sort;
+  const when = p.get("when");
+  if (when && VALID_RANGES.includes(when)) {
+    activeRange = when;
+    document.querySelectorAll("button[data-range]")
+      .forEach(x => x.classList.toggle("active", x.dataset.range === when));
+  }
+}
+
+function syncUrl() {
+  const p = new URLSearchParams();
+  const csv = new URLSearchParams(location.search).get("csv");
+  if (csv) p.set("csv", csv);            // keep local-testing override intact
+  if (el.state.value !== "all") p.set("state", el.state.value);
+  if (el.city.value !== "all") p.set("city", el.city.value);
+  if (el.venue.value !== "all") p.set("venue", el.venue.value);
+  if (el.genre.value !== "all") p.set("genre", el.genre.value);
+  if (el.free.checked) p.set("free", "1");
+  if (el.sort.value !== "date") p.set("sort", el.sort.value);
+  if (activeRange !== "all") p.set("when", activeRange);
+  const qs = p.toString();
+  history.replaceState(null, "", qs ? location.pathname + "?" + qs : location.pathname);
+}
 function getFiltered() {
   const f = { state: selected(el.state), city: selected(el.city), venue: selected(el.venue), genre: selected(el.genre) };
   const list = events.filter(x =>
@@ -327,6 +371,7 @@ function render() {
 
   el.summary.textContent = `Showing ${list.length} of ${events.length} upcoming shows`;
   el.empty.hidden = list.length !== 0 || events.length === 0;
+  syncUrl();
 }
 
 // Re-render when crossing the breakpoint (rotation, resize).
