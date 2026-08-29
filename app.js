@@ -33,6 +33,7 @@ const el = {
   venue: document.getElementById("venueFilter"),
   genre: document.getElementById("genreFilter"),
   free: document.getElementById("freeFilter"),
+  nola: document.getElementById("nolaFilter"),
   sort: document.getElementById("sortFilter")
 };
 
@@ -191,7 +192,14 @@ function dateMatches(date) {
 function selected(select) { return select.value === "all" ? null : select.value; }
 function getFiltered() {
   const f = { state: selected(el.state), city: selected(el.city), venue: selected(el.venue), genre: selected(el.genre) };
+  // New Orleans sits outside the Gulf Coast proper and carries a large share
+  // of the rows, so Louisiana is hidden unless it is asked for. Asking for a
+  // Louisiana state or city directly counts as asking for it.
+  const explicitLA = f.state === "LA" ||
+    (f.city && events.some(x => x.city === f.city && x.state === "LA"));
+  const includeLA = el.nola.checked || explicitLA;
   const list = events.filter(x =>
+    (includeLA || x.state !== "LA") &&
     dateMatches(x.date) &&
     (!f.state || x.state === f.state) &&
     (!f.city || x.city === f.city) &&
@@ -330,12 +338,13 @@ document.getElementById("dateButtons").addEventListener("click", e => {
   document.querySelectorAll("button[data-range]").forEach(x => x.classList.toggle("active", x === b));
   render();
 });
-[el.state, el.city, el.venue, el.genre, el.free, el.sort].forEach(c => c.addEventListener("change", render));
+[el.state, el.city, el.venue, el.genre, el.free, el.nola, el.sort].forEach(c => c.addEventListener("change", render));
 document.getElementById("resetButton").addEventListener("click", () => {
   activeRange = "all";
   document.querySelectorAll("button[data-range]").forEach(x => x.classList.toggle("active", x.dataset.range === "all"));
   [el.state, el.city, el.venue, el.genre].forEach(x => x.value = "all");
   el.free.checked = false;
+  el.nola.checked = false;
   el.sort.value = "date";
   render();
 });
